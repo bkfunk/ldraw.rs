@@ -8,6 +8,7 @@ members = [
     "renderer",
     "tools/baker",
     "tools/ldr2img",
+    "tools/ldraw_converter",
     "tools/viewer/common",
     "tools/viewer/native",
     "tools/viewer/web",
