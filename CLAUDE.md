@@ -6,6 +6,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 LDraw.rs is a Rust library for manipulating and rendering LDraw (virtual LEGO CAD) model files. It can be compiled to WebAssembly for browser-based rendering.
 
+## Current Project
+
+The goal of the current development project, which uses a fork of LDraw.rs, is to allow other programs, and in particular an app built in Godot for designing and simulating Lego creations, to import, process, and manipulate parts and models from their corresponding LDraw files. In particular, the workflow is as follows:
+
+- Use existing functionality of LDraw.rs to create Rust objects for all the LDraw parts in a particular folder
+- Add any additional data required to render and manipulate in a CAD-type program
+- Supplement those Rust objects with metadata about how each part can connect to other parts (e.g. where the studs are, or, for a technic pin, say, how much rotational friction there is when connected to a pin hole).
+- Create a Rust index of all the parts by various attributes (name, size, available connection types, etc.) to allow for fast part lookup and search.
+- Once all parts are represented fully in Rust data types, we can then do any of:
+  1. Export those data types to various file formats (e.g. stl, obj)
+  2. Use those data types directly in Godot using the [godot-rust](https://godot-rust.github.io/docs/gdext/master/godot/) project, which provides Rust bindings for Godot 4.
+  3. Manipulate them in native Rust code
+
 ## Build Commands
 
 ### Core Library
@@ -120,3 +133,51 @@ When working with LDraw files:
 - Respect BFC certification and winding orders
 - Handle multipart documents correctly
 - Maintain part alias normalization
+
+## Current Development Status
+
+### Connection System
+The project has implemented a foundation for part connections:
+- **Coupling Types**: Comprehensive definitions for LEGO connections (studs, pins, axles, clips, hinges)
+- **Connection Properties**: Physical properties including friction, break forces, and movement constraints
+- **Connection Graph**: System for tracking active connections between parts
+- **Coupling Patterns**: Helper functions for generating common LEGO coupling configurations
+
+### High-Level Development Plan
+
+#### Phase 1: Coupling Detection and Integration
+1. **Complete ldraw_converter tool** - Process LDraw files and automatically detect coupling points from primitives
+2. **Implement coupling detection algorithm** - Analyze standard LDraw primitives (stud.dat, etc.) to identify connection locations
+3. **Extend Part structure** - Add coupling metadata to the existing Part representation
+
+#### Phase 2: Indexing and Search
+1. **Build part index system** - Create searchable data structures indexed by name, dimensions, coupling types
+2. **Implement query API** - Enable finding parts by various attributes and compatible connections
+3. **Add categorization** - Automatically categorize parts based on type and function
+
+#### Phase 3: Export and Integration
+1. **Add export functionality** - Support STL, OBJ, and other 3D formats
+2. **Prepare Godot integration** - Create compatible data structures for godot-rust bindings
+3. **Optimize for real-time use** - Ensure performance meets CAD application requirements
+
+### Critical Path Forward
+
+1. **First Priority**: Complete ldraw_converter implementation
+   - Parse LDraw files and detect coupling metadata from primitives/subparts
+   - Store coupling information alongside geometry data
+
+2. **Second Priority**: Automatic coupling detection
+   - Map primitive usage (stud.dat, pin.dat, etc.) to coupling locations
+   - Handle transformations to get correct world-space positions
+
+3. **Third Priority**: Part indexing system
+   - Enable fast lookup by name, size, and connection compatibility
+   - Support complex queries for part selection
+
+4. **Fourth Priority**: Basic export functionality
+   - Start with STL format as it's widely supported
+   - Ensure coupling metadata is preserved or exported separately
+
+5. **Final Priority**: Godot preparation
+   - Structure data for efficient use in game engine
+   - Consider serialization format for cross-language compatibility
