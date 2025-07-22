@@ -15,6 +15,7 @@ pub mod connection;
 pub mod connection_solver;
 pub mod constraints;
 pub mod coupling;
+pub mod coupling_detection;
 pub mod coupling_patterns;
 pub mod geometry;
 pub mod model;

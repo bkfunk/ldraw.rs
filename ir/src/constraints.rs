@@ -180,6 +180,7 @@ mod tests {
                 break_force: 10.0,
                 break_torque: 5.0,
                 dynamic: true,
+                clutch_force: 5.0,
             },
             state: ConnectionState::default(),
             connection_point_a: Vector3::new(0.0, 0.0, 0.0),

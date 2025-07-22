@@ -309,6 +309,7 @@ pub struct Part {
     pub geometry: PartBufferBundle,
     pub bounding_box: BoundingBox3,
     pub rotation_center: Vector3,
+    pub couplings: Vec<crate::coupling::Coupling>,
 }
 
 impl Part {
@@ -317,12 +318,14 @@ impl Part {
         geometry: PartBufferBundle,
         bounding_box: BoundingBox3,
         rotation_center: Vector3,
+        couplings: Vec<crate::coupling::Coupling>,
     ) -> Self {
         Part {
             metadata,
             geometry,
             bounding_box,
             rotation_center,
+            couplings,
         }
     }
 
@@ -915,11 +918,15 @@ impl<'a> PartBaker<'a> {
         self.mesh_builder.smooth_normals();
         self.mesh_builder.bake(&mut self.builder, &mut bounding_box);
 
+        // For now, create an empty coupling list - this will be populated by the public functions
+        let couplings = Vec::new();
+
         Part::new(
             self.metadata,
             self.builder.build(),
             bounding_box,
             Vector3::new(0.0, 0.0, 0.0),
+            couplings,
         )
     }
 
@@ -977,6 +984,44 @@ pub fn bake_part_from_document(
         local,
     );
     baker.bake()
+}
+
+/// Bake a part from a multipart document with coupling detection
+pub fn bake_part_with_couplings<D: Deref<Target = MultipartDocument> + Clone>(
+    document: D,
+    resolutions: &ResolutionResult,
+    local: bool,
+) -> Part {
+    // Detect couplings from the document first
+    let couplings = crate::coupling_detection::detect_part_couplings(&*document, resolutions);
+    
+    // Then bake the part geometry
+    let mut part = bake_part_from_multipart_document(document, resolutions, local);
+    part.couplings = couplings;
+    
+    part
+}
+
+/// Bake a part from a single document with coupling detection
+pub fn bake_part_with_couplings_from_document(
+    document: &Document,
+    resolutions: &ResolutionResult,
+    local: bool,
+) -> Part {
+    // First bake the part geometry
+    let mut part = bake_part_from_document(document, resolutions, local);
+    
+    // For single documents, we need to create a multipart document wrapper for coupling detection
+    let multipart_document = MultipartDocument {
+        body: document.clone(),
+        subparts: HashMap::new(),
+    };
+    
+    // Then detect couplings
+    let couplings = crate::coupling_detection::detect_part_couplings(&multipart_document, resolutions);
+    part.couplings = couplings;
+    
+    part
 }
 
 pub trait PartDimensionQuerier<P> {
