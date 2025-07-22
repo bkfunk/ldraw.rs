@@ -49,9 +49,17 @@ impl CouplingPatterns {
         };
 
         // Corner anti-studs
-        let x_positions: Vec<u32> = if width == 1 { vec![0] } else { vec![0, width - 1] };
-        let z_positions: Vec<u32> = if length == 1 { vec![0] } else { vec![0, length - 1] };
-        
+        let x_positions: Vec<u32> = if width == 1 {
+            vec![0]
+        } else {
+            vec![0, width - 1]
+        };
+        let z_positions: Vec<u32> = if length == 1 {
+            vec![0]
+        } else {
+            vec![0, length - 1]
+        };
+
         for &x in &x_positions {
             for &z in &z_positions {
                 let center = Vector3::new(
@@ -97,7 +105,7 @@ impl CouplingPatterns {
     /// Create a technic pin hole
     pub fn create_pin_hole(id: String, center: Vector3, axis: Vector3) -> Coupling {
         Coupling {
-            coupling_type: CouplingType::PinHole,
+            coupling_type: CouplingType::FullPinHole,
             id,
             center,
             normal: axis.normalize(),
@@ -144,9 +152,9 @@ impl CouplingPatterns {
     pub fn create_hinge(id: &str, center: Vector3, axis: Vector3, is_male: bool) -> Coupling {
         Coupling {
             coupling_type: if is_male {
-                CouplingType::HingeMale
+                CouplingType::Hinge1x2BrickMale
             } else {
-                CouplingType::HingeFemale
+                CouplingType::Hinge1x2BrickFemale
             },
             id: id.to_string(),
             center,
@@ -217,7 +225,7 @@ mod tests {
     fn test_create_studs_2x2() {
         let studs = CouplingPatterns::create_studs(2, 2);
         assert_eq!(studs.len(), 4);
-        
+
         // Check corners are positioned correctly
         let expected_positions = vec![
             Vector3::new(-10.0, 0.0, -10.0), // stud_0_0
@@ -225,7 +233,7 @@ mod tests {
             Vector3::new(10.0, 0.0, -10.0),  // stud_1_0
             Vector3::new(10.0, 0.0, 10.0),   // stud_1_1
         ];
-        
+
         for stud in &studs {
             assert!(expected_positions.iter().any(|&pos| stud.center == pos));
         }
@@ -234,22 +242,24 @@ mod tests {
     #[test]
     fn test_create_antistuds_2x2_plate() {
         let antistuds = CouplingPatterns::create_antistuds(2, 2, HeightType::Plate);
-        
+
         // 2x2 has 4 corner antistuds + 1 center tube
         assert_eq!(antistuds.len(), 5);
-        
+
         // Check antistuds
-        let antistud_count = antistuds.iter()
+        let antistud_count = antistuds
+            .iter()
             .filter(|c| c.coupling_type == CouplingType::AntiStud)
             .count();
         assert_eq!(antistud_count, 4);
-        
+
         // Check tube
-        let tube_count = antistuds.iter()
+        let tube_count = antistuds
+            .iter()
             .filter(|c| c.coupling_type == CouplingType::Tube)
             .count();
         assert_eq!(tube_count, 1);
-        
+
         // Check height
         for coupling in &antistuds {
             assert_eq!(coupling.center.y, -8.0); // Plate height
@@ -260,7 +270,7 @@ mod tests {
     #[test]
     fn test_create_antistuds_1x1_brick() {
         let antistuds = CouplingPatterns::create_antistuds(1, 1, HeightType::Brick);
-        
+
         // 1x1 has only 1 corner antistud, no tubes
         assert_eq!(antistuds.len(), 1);
         assert_eq!(antistuds[0].coupling_type, CouplingType::AntiStud);
@@ -270,14 +280,16 @@ mod tests {
     #[test]
     fn test_create_antistuds_3x3() {
         let antistuds = CouplingPatterns::create_antistuds(3, 3, HeightType::Plate);
-        
+
         // 3x3 has 4 corner antistuds + 4 tubes (2x2 grid)
-        let antistud_count = antistuds.iter()
+        let antistud_count = antistuds
+            .iter()
             .filter(|c| c.coupling_type == CouplingType::AntiStud)
             .count();
         assert_eq!(antistud_count, 4);
-        
-        let tube_count = antistuds.iter()
+
+        let tube_count = antistuds
+            .iter()
             .filter(|c| c.coupling_type == CouplingType::Tube)
             .count();
         assert_eq!(tube_count, 4);
@@ -290,14 +302,14 @@ mod tests {
             Vector3::new(10.0, 5.0, 0.0),
             Vector3::new(1.0, 1.0, 0.0), // Non-normalized
         );
-        
-        assert_eq!(pin_hole.coupling_type, CouplingType::PinHole);
+
+        assert_eq!(pin_hole.coupling_type, CouplingType::FullPinHole);
         assert_eq!(pin_hole.id, "test_pin");
         assert_eq!(pin_hole.center, Vector3::new(10.0, 5.0, 0.0));
-        
+
         // Check normal is normalized
         assert_abs_diff_eq!(pin_hole.normal.magnitude(), 1.0, epsilon = 0.001);
-        
+
         // Check geometry
         match pin_hole.geometry {
             CouplingGeometry::Linear { length } => assert_eq!(length, 20.0),
@@ -312,7 +324,7 @@ mod tests {
             Vector3::new(0.0, 0.0, 0.0),
             Vector3::unit_z(),
         );
-        
+
         assert_eq!(axle_hole.coupling_type, CouplingType::AxleHole);
         assert_eq!(axle_hole.id, "test_axle");
         match axle_hole.geometry {
@@ -328,15 +340,15 @@ mod tests {
             Vector3::new(0.0, 0.0, 5.0),
             Vector3::unit_x(),
         );
-        
+
         assert_eq!(clips.len(), 2);
-        
+
         // Check closed clip
         let closed_clip = &clips[0];
         assert_eq!(closed_clip.coupling_type, CouplingType::Clip);
         assert_eq!(closed_clip.id, "test_clip_closed");
         assert_eq!(closed_clip.excludes, vec!["test_clip_open"]);
-        
+
         // Check open clip
         let open_clip = &clips[1];
         assert_eq!(open_clip.coupling_type, CouplingType::ClipOpen);
@@ -352,32 +364,34 @@ mod tests {
             Vector3::unit_x(),
             true,
         );
-        
+
         assert_eq!(male_hinge.coupling_type, CouplingType::HingeMale);
         assert_eq!(male_hinge.id, "hinge_m");
-        
+
         let female_hinge = CouplingPatterns::create_hinge(
             "hinge_f",
             Vector3::new(0.0, 0.0, 0.0),
             Vector3::unit_x(),
             false,
         );
-        
+
         assert_eq!(female_hinge.coupling_type, CouplingType::HingeFemale);
     }
 
     #[test]
     fn test_generate_brick_couplings() {
         let couplings = generate_brick_couplings(2, 3, HeightType::Brick);
-        
+
         // 2x3 brick has 6 studs on top
-        let stud_count = couplings.iter()
+        let stud_count = couplings
+            .iter()
             .filter(|c| c.coupling_type == CouplingType::Stud)
             .count();
         assert_eq!(stud_count, 6);
-        
+
         // Check that we have antistuds and tubes
-        let antistud_count = couplings.iter()
+        let antistud_count = couplings
+            .iter()
             .filter(|c| c.coupling_type == CouplingType::AntiStud)
             .count();
         assert!(antistud_count > 0);
@@ -386,14 +400,14 @@ mod tests {
     #[test]
     fn test_generate_technic_beam_couplings() {
         let couplings = generate_technic_beam_couplings(5);
-        
+
         assert_eq!(couplings.len(), 5);
-        
+
         for (i, coupling) in couplings.iter().enumerate() {
-            assert_eq!(coupling.coupling_type, CouplingType::PinHole);
+            assert_eq!(coupling.coupling_type, CouplingType::FullPinHole);
             assert_eq!(coupling.id, format!("pin_hole_{}", i));
             assert_eq!(coupling.normal, Vector3::unit_z());
-            
+
             // Check spacing
             let expected_x = (i as f32 - 2.0) * 20.0;
             assert_eq!(coupling.center.x, expected_x);

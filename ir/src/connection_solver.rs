@@ -181,6 +181,7 @@ mod tests {
                 break_force: 10.0,
                 break_torque: 5.0,
                 dynamic: true,
+                clutch_force: 8.0,
             },
             state: ConnectionState::default(),
             connection_point_a: Vector3::zero(),
@@ -303,7 +304,7 @@ mod tests {
     #[test]
     fn test_linear_geometry_connections() {
         let coupling_a = Coupling {
-            coupling_type: CouplingType::PinHole,
+            coupling_type: CouplingType::FullPinHole,
             id: "pin_hole".to_string(),
             center: Vector3::new(0.0, 0.0, 0.0),
             normal: Vector3::unit_x(),

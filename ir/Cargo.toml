@@ -10,3 +10,7 @@ serde.workspace = true
 kdtree = "~0.6"
 ldraw = { path = "../ldraw" }
 uuid.workspace = true
+couplings = { path = "../couplings" }
+
+[features]
+test-library = ["ldraw/test-library"]
