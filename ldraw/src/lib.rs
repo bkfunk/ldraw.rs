@@ -11,6 +11,7 @@ use serde::de::{Error as DeserializeError, Visitor};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 pub mod color;
+pub mod coupling_detection;
 pub mod document;
 pub mod elements;
 pub mod error;
