@@ -109,6 +109,7 @@ pub enum Material {
     Rubber,
     MatteMetallic,
     Metal,
+    Fabric,
     Custom(CustomizedMaterial),
 }
 
