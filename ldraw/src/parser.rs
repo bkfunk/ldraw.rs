@@ -716,6 +716,9 @@ pub async fn parse_color_definitions<T: AsyncBufRead + Unpin>(
                 "MATTE_METALLIC" => {
                     material = Material::MatteMetallic;
                 }
+                "FABRIC" => {
+                    material = Material::Fabric;
+                }
                 "MATERIAL" => {
                     material = Material::Custom(parse_customized_material(&mut it)?);
                 }
