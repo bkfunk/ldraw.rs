@@ -219,7 +219,7 @@ impl CouplingType {
                         prev_is_lower = c.is_lowercase();
                     }
                 }
-                name
+                Box::leak(name.into_boxed_str())
             }
         }
     }
