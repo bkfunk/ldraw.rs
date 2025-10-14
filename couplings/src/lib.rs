@@ -377,6 +377,20 @@ impl CouplingType {
     }
 }
 
+/// LDraw Unit (LDU) constants for coupling geometry
+/// 1 LDU = 0.4mm in real world
+/// 20 LDU = 8mm = 1 standard LEGO module
+pub mod ldu_constants {
+    /// Full-length Technic pin or hole (1.0 modules = 20 LDU)
+    pub const FULL_PIN_LENGTH: f32 = 20.0;
+    /// Half-length Technic pin or hole (0.5 modules = 10 LDU)
+    pub const HALF_PIN_LENGTH: f32 = 10.0;
+    /// Axle segment length (0.2 modules = 4 LDU)
+    pub const AXLE_SEGMENT_LENGTH: f32 = 4.0;
+    /// Standard anti-stud tube inner radius (6 LDU)
+    pub const TUBE_RADIUS: f32 = 6.0;
+}
+
 /// Mapping from LDraw primitive names to coupling types
 pub struct PrimitiveMapping {
     /// Pattern to match primitive names (case-insensitive)
@@ -461,63 +475,29 @@ impl PrimitiveRegistry {
 
     /// Register smooth (frictionless) pin primitives
     fn register_pin_primitives(&mut self) {
+        use ldu_constants::*;
+
         // Full-length pins (1.0 = 20 LDU)
-        self.register_mapping(PrimitiveMapping {
-            pattern: "connect.dat".to_string(),
-            coupling_type: CouplingType::Pin,
-            position_offset: [0.0, 0.0, 0.0],
-            normal_direction: [0.0, 0.0, 1.0],
-            geometry_override: Some(CouplingGeometry::Linear { length: 20.0 }),
-        });
-
-        self.register_mapping(PrimitiveMapping {
-            pattern: "connect2.dat".to_string(),
-            coupling_type: CouplingType::Pin,
-            position_offset: [0.0, 0.0, 0.0],
-            normal_direction: [0.0, 0.0, 1.0],
-            geometry_override: Some(CouplingGeometry::Linear { length: 20.0 }),
-        });
-
-        self.register_mapping(PrimitiveMapping {
-            pattern: "connect5.dat".to_string(),
-            coupling_type: CouplingType::Pin,
-            position_offset: [0.0, 0.0, 0.0],
-            normal_direction: [0.0, 0.0, 1.0],
-            geometry_override: Some(CouplingGeometry::Linear { length: 20.0 }),
-        });
-
-        self.register_mapping(PrimitiveMapping {
-            pattern: "connect6.dat".to_string(),
-            coupling_type: CouplingType::Pin,
-            position_offset: [0.0, 0.0, 0.0],
-            normal_direction: [0.0, 0.0, 1.0],
-            geometry_override: Some(CouplingGeometry::Linear { length: 20.0 }),
-        });
-
-        self.register_mapping(PrimitiveMapping {
-            pattern: "connect7.dat".to_string(),
-            coupling_type: CouplingType::Pin,
-            position_offset: [0.0, 0.0, 0.0],
-            normal_direction: [0.0, 0.0, 1.0],
-            geometry_override: Some(CouplingGeometry::Linear { length: 20.0 }),
-        });
+        for variant in ["connect.dat", "connect2.dat", "connect5.dat", "connect6.dat", "connect7.dat", "connect8.dat", "connect10.dat"] {
+            self.register_mapping(PrimitiveMapping {
+                pattern: variant.to_string(),
+                coupling_type: CouplingType::Pin,
+                position_offset: [0.0, 0.0, 0.0],
+                normal_direction: [0.0, 0.0, 1.0],
+                geometry_override: Some(CouplingGeometry::Linear { length: FULL_PIN_LENGTH }),
+            });
+        }
 
         // Half-length pins (0.5 = 10 LDU)
-        self.register_mapping(PrimitiveMapping {
-            pattern: "connect3.dat".to_string(),
-            coupling_type: CouplingType::HalfPin,
-            position_offset: [0.0, 0.0, 0.0],
-            normal_direction: [0.0, 0.0, 1.0],
-            geometry_override: Some(CouplingGeometry::Linear { length: 10.0 }),
-        });
-
-        self.register_mapping(PrimitiveMapping {
-            pattern: "connect4.dat".to_string(),
-            coupling_type: CouplingType::HalfPin,
-            position_offset: [0.0, 0.0, 0.0],
-            normal_direction: [0.0, 0.0, 1.0],
-            geometry_override: Some(CouplingGeometry::Linear { length: 10.0 }),
-        });
+        for variant in ["connect3.dat", "connect4.dat"] {
+            self.register_mapping(PrimitiveMapping {
+                pattern: variant.to_string(),
+                coupling_type: CouplingType::HalfPin,
+                position_offset: [0.0, 0.0, 0.0],
+                normal_direction: [0.0, 0.0, 1.0],
+                geometry_override: Some(CouplingGeometry::Linear { length: HALF_PIN_LENGTH }),
+            });
+        }
 
         // Bushings (act like pins)
         self.register_mapping(PrimitiveMapping {
@@ -525,7 +505,7 @@ impl PrimitiveRegistry {
             coupling_type: CouplingType::Pin,
             position_offset: [0.0, 0.0, 0.0],
             normal_direction: [0.0, 0.0, 1.0],
-            geometry_override: Some(CouplingGeometry::Linear { length: 10.0 }),
+            geometry_override: Some(CouplingGeometry::Linear { length: HALF_PIN_LENGTH }),
         });
     }
 
@@ -670,11 +650,18 @@ impl PrimitiveRegistry {
     }
 
     /// Find mapping for a primitive name
+    /// Matches primitives by exact name or by path suffix (e.g., "p/stud.dat" matches "stud.dat")
     pub fn find_mapping(&self, primitive_name: &str) -> Option<&PrimitiveMapping> {
         let name_lower = primitive_name.to_lowercase();
         self.mappings
             .iter()
-            .find(|mapping| name_lower.contains(&mapping.pattern.to_lowercase()))
+            .find(|mapping| {
+                let pattern = mapping.pattern.to_lowercase();
+                // Match exact name or path suffix (handles both / and \ separators)
+                name_lower == pattern
+                    || name_lower.ends_with(&format!("/{}", pattern))
+                    || name_lower.ends_with(&format!("\\{}", pattern))
+            })
     }
 
     /// Get all registered mappings
@@ -897,5 +884,104 @@ mod tests {
         // - 1 tube
         // Total: 37 primitives minimum
         assert!(count >= 37, "Expected at least 37 primitives, got {}", count);
+    }
+
+    #[test]
+    fn test_primitive_matching_exact() {
+        let registry = PrimitiveRegistry::new();
+
+        // Should match exact name
+        let stud = registry.find_mapping("stud.dat");
+        assert!(stud.is_some());
+        assert_eq!(stud.unwrap().pattern, "stud.dat");
+    }
+
+    #[test]
+    fn test_primitive_case_insensitive() {
+        let registry = PrimitiveRegistry::new();
+
+        // All case variations should match
+        assert!(registry.find_mapping("STUD.DAT").is_some());
+        assert!(registry.find_mapping("Stud.Dat").is_some());
+        assert!(registry.find_mapping("stud.dat").is_some());
+        assert!(registry.find_mapping("StUd.DaT").is_some());
+    }
+
+    #[test]
+    fn test_primitive_with_path_prefix() {
+        let registry = PrimitiveRegistry::new();
+
+        // Should match with path prefixes
+        assert!(registry.find_mapping("p/stud.dat").is_some());
+        assert!(registry.find_mapping("p\\stud.dat").is_some());
+        assert!(registry.find_mapping("ldraw/p/stud.dat").is_some());
+
+        // Verify it's the correct mapping
+        let mapping = registry.find_mapping("p/stud.dat").unwrap();
+        assert_eq!(mapping.coupling_type, CouplingType::Stud);
+    }
+
+    #[test]
+    fn test_primitive_no_false_matches() {
+        let registry = PrimitiveRegistry::new();
+
+        // Should NOT match substrings in middle of name
+        let result = registry.find_mapping("mystud.dat");
+        // If found, it should NOT be the stud.dat mapping
+        if let Some(mapping) = result {
+            assert_ne!(mapping.pattern, "stud.dat",
+                "mystud.dat should not match stud.dat pattern");
+        }
+
+        // Should NOT match partial names
+        assert!(registry.find_mapping("stud").is_none());
+        assert!(registry.find_mapping("stu.dat").is_none());
+    }
+
+    #[test]
+    fn test_ambiguous_primitive_names() {
+        let registry = PrimitiveRegistry::new();
+
+        // axle.dat and daxle.dat are different primitives
+        // Should only match exact or suffix, not substring
+        let axle = registry.find_mapping("axle.dat");
+        assert!(axle.is_some());
+        assert_eq!(axle.unwrap().coupling_type, CouplingType::Axle);
+
+        // "connect.dat" should not be confused with "connect2.dat"
+        let connect = registry.find_mapping("connect.dat");
+        let connect2 = registry.find_mapping("connect2.dat");
+        assert!(connect.is_some());
+        assert!(connect2.is_some());
+        assert_eq!(connect.unwrap().pattern, "connect.dat");
+        assert_eq!(connect2.unwrap().pattern, "connect2.dat");
+    }
+
+    #[test]
+    fn test_all_primitives_have_valid_geometry() {
+        let registry = PrimitiveRegistry::new();
+
+        for mapping in registry.mappings() {
+            // Check if there's a geometry override, otherwise get default
+            let geometry = match &mapping.geometry_override {
+                Some(geom) => geom,
+                None => &mapping.coupling_type.default_geometry(),
+            };
+
+            // Verify geometry has valid values
+            match geometry {
+                CouplingGeometry::Linear { length } => {
+                    assert!(*length > 0.0,
+                        "Primitive {} has invalid length: {}",
+                        mapping.pattern, length);
+                }
+                CouplingGeometry::Circular { radius } => {
+                    assert!(*radius > 0.0,
+                        "Primitive {} has invalid radius: {}",
+                        mapping.pattern, radius);
+                }
+                _ => {}
+            }
+        }
     }
 }
