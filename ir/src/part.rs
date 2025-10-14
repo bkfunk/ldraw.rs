@@ -266,10 +266,9 @@ impl PartBufferBundleBuilder {
             (ColorReference::Current | ColorReference::Complement, false) => {
                 Some(&mut self.uncolored_without_bfc_mesh)
             }
-            (ColorReference::Color(_), _) => {
+            (ColorReference::Color(_) | ColorReference::Unknown(_) | ColorReference::Unresolved(_), _) => {
                 Some(self.colored_meshes.entry(group.clone()).or_default())
             }
-            _ => None,
         }
     }
 
