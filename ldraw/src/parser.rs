@@ -637,6 +637,21 @@ fn parse_customized_material(
                 maxsize,
             }))
         }
+        "FABRIC" => {
+            // FABRIC material with subtype (e.g., CANVAS)
+            // For now, just consume the subtype token and treat as Plastic
+            // TODO: Implement proper fabric material handling
+            let _subtype = next_token(iterator, false).ok();
+            // Return a dummy speckle material as placeholder
+            Ok(CustomizedMaterial::Speckle(MaterialSpeckle {
+                value: Rgba::new(128, 128, 128, 255),
+                luminance: 0,
+                fraction: 0.0,
+                size: 0,
+                minsize: 0.0,
+                maxsize: 0.0,
+            }))
+        }
         e => Err(ColorDefinitionParseError::UnknownMaterial(e.to_string())),
     }
 }

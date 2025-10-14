@@ -413,7 +413,17 @@ impl PrimitiveRegistry {
 
     /// Register standard LDraw primitives
     fn register_standard_primitives(&mut self) {
-        // Standard studs
+        self.register_stud_primitives();
+        self.register_pin_primitives();
+        self.register_friction_pin_primitives();
+        self.register_pin_hole_primitives();
+        self.register_axle_primitives();
+        self.register_tube_primitives();
+    }
+
+    /// Register stud primitives
+    fn register_stud_primitives(&mut self) {
+        // Standard solid studs
         self.register_mapping(PrimitiveMapping {
             pattern: "stud.dat".to_string(),
             coupling_type: CouplingType::Stud,
@@ -430,7 +440,8 @@ impl PrimitiveRegistry {
             geometry_override: None,
         });
 
-        // Hollow studs
+        // Hollow studs (stud4.dat is context-dependent, see anti-stud detection)
+        // For now, we register it as HollowStud; the detection code can override
         self.register_mapping(PrimitiveMapping {
             pattern: "stud4.dat".to_string(),
             coupling_type: CouplingType::HollowStud,
@@ -439,24 +450,212 @@ impl PrimitiveRegistry {
             geometry_override: None,
         });
 
-        // Technic holes
+        self.register_mapping(PrimitiveMapping {
+            pattern: "stud4a.dat".to_string(),
+            coupling_type: CouplingType::HollowStud,
+            position_offset: [0.0, 0.0, 0.0],
+            normal_direction: [0.0, 1.0, 0.0],
+            geometry_override: None,
+        });
+    }
+
+    /// Register smooth (frictionless) pin primitives
+    fn register_pin_primitives(&mut self) {
+        // Full-length pins (1.0 = 20 LDU)
+        self.register_mapping(PrimitiveMapping {
+            pattern: "connect.dat".to_string(),
+            coupling_type: CouplingType::Pin,
+            position_offset: [0.0, 0.0, 0.0],
+            normal_direction: [0.0, 0.0, 1.0],
+            geometry_override: Some(CouplingGeometry::Linear { length: 20.0 }),
+        });
+
+        self.register_mapping(PrimitiveMapping {
+            pattern: "connect2.dat".to_string(),
+            coupling_type: CouplingType::Pin,
+            position_offset: [0.0, 0.0, 0.0],
+            normal_direction: [0.0, 0.0, 1.0],
+            geometry_override: Some(CouplingGeometry::Linear { length: 20.0 }),
+        });
+
+        self.register_mapping(PrimitiveMapping {
+            pattern: "connect5.dat".to_string(),
+            coupling_type: CouplingType::Pin,
+            position_offset: [0.0, 0.0, 0.0],
+            normal_direction: [0.0, 0.0, 1.0],
+            geometry_override: Some(CouplingGeometry::Linear { length: 20.0 }),
+        });
+
+        self.register_mapping(PrimitiveMapping {
+            pattern: "connect6.dat".to_string(),
+            coupling_type: CouplingType::Pin,
+            position_offset: [0.0, 0.0, 0.0],
+            normal_direction: [0.0, 0.0, 1.0],
+            geometry_override: Some(CouplingGeometry::Linear { length: 20.0 }),
+        });
+
+        self.register_mapping(PrimitiveMapping {
+            pattern: "connect7.dat".to_string(),
+            coupling_type: CouplingType::Pin,
+            position_offset: [0.0, 0.0, 0.0],
+            normal_direction: [0.0, 0.0, 1.0],
+            geometry_override: Some(CouplingGeometry::Linear { length: 20.0 }),
+        });
+
+        // Half-length pins (0.5 = 10 LDU)
+        self.register_mapping(PrimitiveMapping {
+            pattern: "connect3.dat".to_string(),
+            coupling_type: CouplingType::HalfPin,
+            position_offset: [0.0, 0.0, 0.0],
+            normal_direction: [0.0, 0.0, 1.0],
+            geometry_override: Some(CouplingGeometry::Linear { length: 10.0 }),
+        });
+
+        self.register_mapping(PrimitiveMapping {
+            pattern: "connect4.dat".to_string(),
+            coupling_type: CouplingType::HalfPin,
+            position_offset: [0.0, 0.0, 0.0],
+            normal_direction: [0.0, 0.0, 1.0],
+            geometry_override: Some(CouplingGeometry::Linear { length: 10.0 }),
+        });
+
+        // Bushings (act like pins)
+        self.register_mapping(PrimitiveMapping {
+            pattern: "bush.dat".to_string(),
+            coupling_type: CouplingType::Pin,
+            position_offset: [0.0, 0.0, 0.0],
+            normal_direction: [0.0, 0.0, 1.0],
+            geometry_override: Some(CouplingGeometry::Linear { length: 10.0 }),
+        });
+    }
+
+    /// Register friction pin primitives
+    fn register_friction_pin_primitives(&mut self) {
+        // Friction pins have ridges for grip
+        // Full-length friction pins (1.0 = 20 LDU)
+        self.register_mapping(PrimitiveMapping {
+            pattern: "confric.dat".to_string(),
+            coupling_type: CouplingType::PinWithFriction,
+            position_offset: [0.0, 0.0, 0.0],
+            normal_direction: [0.0, 0.0, 1.0],
+            geometry_override: Some(CouplingGeometry::Linear { length: 20.0 }),
+        });
+
+        self.register_mapping(PrimitiveMapping {
+            pattern: "confric2.dat".to_string(),
+            coupling_type: CouplingType::PinWithFriction,
+            position_offset: [0.0, 0.0, 0.0],
+            normal_direction: [0.0, 0.0, 1.0],
+            geometry_override: Some(CouplingGeometry::Linear { length: 20.0 }),
+        });
+
+        self.register_mapping(PrimitiveMapping {
+            pattern: "confric5.dat".to_string(),
+            coupling_type: CouplingType::PinWithFriction,
+            position_offset: [0.0, 0.0, 0.0],
+            normal_direction: [0.0, 0.0, 1.0],
+            geometry_override: Some(CouplingGeometry::Linear { length: 20.0 }),
+        });
+    }
+
+    /// Register pin hole primitives
+    fn register_pin_hole_primitives(&mut self) {
+        // Full pin holes
         self.register_mapping(PrimitiveMapping {
             pattern: "peghole.dat".to_string(),
             coupling_type: CouplingType::FullPinHole,
             position_offset: [0.0, 0.0, 0.0],
             normal_direction: [0.0, 0.0, 1.0],
-            geometry_override: None,
+            geometry_override: Some(CouplingGeometry::Linear { length: 20.0 }),
         });
 
+        self.register_mapping(PrimitiveMapping {
+            pattern: "peghole2.dat".to_string(),
+            coupling_type: CouplingType::FullPinHole,
+            position_offset: [0.0, 0.0, 0.0],
+            normal_direction: [0.0, 0.0, 1.0],
+            geometry_override: Some(CouplingGeometry::Linear { length: 20.0 }),
+        });
+
+        // Connector holes (similar to peghole)
+        self.register_mapping(PrimitiveMapping {
+            pattern: "connhole.dat".to_string(),
+            coupling_type: CouplingType::FullPinHole,
+            position_offset: [0.0, 0.0, 0.0],
+            normal_direction: [0.0, 0.0, 1.0],
+            geometry_override: Some(CouplingGeometry::Linear { length: 20.0 }),
+        });
+
+        // Half pin holes
+        self.register_mapping(PrimitiveMapping {
+            pattern: "peghole3.dat".to_string(),
+            coupling_type: CouplingType::HalfPinHole,
+            position_offset: [0.0, 0.0, 0.0],
+            normal_direction: [0.0, 0.0, 1.0],
+            geometry_override: Some(CouplingGeometry::Linear { length: 10.0 }),
+        });
+
+        // Negative pin holes (represent the hole space)
+        self.register_mapping(PrimitiveMapping {
+            pattern: "npeghole.dat".to_string(),
+            coupling_type: CouplingType::FullPinHole,
+            position_offset: [0.0, 0.0, 0.0],
+            normal_direction: [0.0, 0.0, 1.0],
+            geometry_override: Some(CouplingGeometry::Linear { length: 20.0 }),
+        });
+
+        // Beam holes (in Technic beams)
+        self.register_mapping(PrimitiveMapping {
+            pattern: "beamhole.dat".to_string(),
+            coupling_type: CouplingType::FullPinHole,
+            position_offset: [0.0, 0.0, 0.0],
+            normal_direction: [0.0, 0.0, 1.0],
+            geometry_override: Some(CouplingGeometry::Linear { length: 20.0 }),
+        });
+    }
+
+    /// Register axle and axle hole primitives
+    fn register_axle_primitives(&mut self) {
+        // Axle cross-sections
+        self.register_mapping(PrimitiveMapping {
+            pattern: "axle.dat".to_string(),
+            coupling_type: CouplingType::Axle,
+            position_offset: [0.0, 0.0, 0.0],
+            normal_direction: [0.0, 0.0, 1.0],
+            geometry_override: Some(CouplingGeometry::Linear { length: 4.0 }),
+        });
+
+        self.register_mapping(PrimitiveMapping {
+            pattern: "axleend.dat".to_string(),
+            coupling_type: CouplingType::Axle,
+            position_offset: [0.0, 0.0, 0.0],
+            normal_direction: [0.0, 0.0, 1.0],
+            geometry_override: Some(CouplingGeometry::Point),
+        });
+
+        // Axle holes
         self.register_mapping(PrimitiveMapping {
             pattern: "axlehole.dat".to_string(),
             coupling_type: CouplingType::AxleHole,
             position_offset: [0.0, 0.0, 0.0],
             normal_direction: [0.0, 0.0, 1.0],
-            geometry_override: None,
+            geometry_override: Some(CouplingGeometry::Linear { length: 20.0 }),
         });
 
-        // Tubes
+        // Open axle holes (various depths)
+        for i in 0..=11 {
+            self.register_mapping(PrimitiveMapping {
+                pattern: format!("axlehol{}.dat", i),
+                coupling_type: CouplingType::AxleHole,
+                position_offset: [0.0, 0.0, 0.0],
+                normal_direction: [0.0, 0.0, 1.0],
+                geometry_override: Some(CouplingGeometry::Linear { length: 20.0 }),
+            });
+        }
+    }
+
+    /// Register tube primitives (for anti-stud connections)
+    fn register_tube_primitives(&mut self) {
         self.register_mapping(PrimitiveMapping {
             pattern: "4-4cyli.dat".to_string(),
             coupling_type: CouplingType::Tube,
@@ -517,5 +716,186 @@ mod tests {
     fn test_antistud_geometry() {
         let geometry = CouplingType::AntiStud.default_geometry();
         assert!(matches!(geometry, CouplingGeometry::GeometricSpace { .. }));
+    }
+
+    #[test]
+    fn test_stud_primitives() {
+        let registry = PrimitiveRegistry::new();
+
+        // Test solid studs
+        let stud = registry.find_mapping("stud.dat").unwrap();
+        assert_eq!(stud.coupling_type, CouplingType::Stud);
+        assert_eq!(stud.normal_direction, [0.0, 1.0, 0.0]);
+
+        let stud2 = registry.find_mapping("stud2.dat").unwrap();
+        assert_eq!(stud2.coupling_type, CouplingType::Stud);
+
+        // Test hollow studs
+        let stud4 = registry.find_mapping("stud4.dat").unwrap();
+        assert_eq!(stud4.coupling_type, CouplingType::HollowStud);
+
+        let stud4a = registry.find_mapping("stud4a.dat").unwrap();
+        assert_eq!(stud4a.coupling_type, CouplingType::HollowStud);
+    }
+
+    #[test]
+    fn test_pin_primitives() {
+        let registry = PrimitiveRegistry::new();
+
+        // Test full-length pins
+        let connect = registry.find_mapping("connect.dat").unwrap();
+        assert_eq!(connect.coupling_type, CouplingType::Pin);
+        assert_eq!(connect.normal_direction, [0.0, 0.0, 1.0]);
+        assert!(matches!(
+            connect.geometry_override,
+            Some(CouplingGeometry::Linear { length }) if length == 20.0
+        ));
+
+        let connect2 = registry.find_mapping("connect2.dat").unwrap();
+        assert_eq!(connect2.coupling_type, CouplingType::Pin);
+
+        // Test half-length pins
+        let connect3 = registry.find_mapping("connect3.dat").unwrap();
+        assert_eq!(connect3.coupling_type, CouplingType::HalfPin);
+        assert!(matches!(
+            connect3.geometry_override,
+            Some(CouplingGeometry::Linear { length }) if length == 10.0
+        ));
+
+        // Test bush (acts like pin)
+        let bush = registry.find_mapping("bush.dat").unwrap();
+        assert_eq!(bush.coupling_type, CouplingType::Pin);
+    }
+
+    #[test]
+    fn test_friction_pin_primitives() {
+        let registry = PrimitiveRegistry::new();
+
+        let confric = registry.find_mapping("confric.dat").unwrap();
+        assert_eq!(confric.coupling_type, CouplingType::PinWithFriction);
+        assert_eq!(confric.normal_direction, [0.0, 0.0, 1.0]);
+        assert!(matches!(
+            confric.geometry_override,
+            Some(CouplingGeometry::Linear { length }) if length == 20.0
+        ));
+
+        let confric2 = registry.find_mapping("confric2.dat").unwrap();
+        assert_eq!(confric2.coupling_type, CouplingType::PinWithFriction);
+    }
+
+    #[test]
+    fn test_pin_hole_primitives() {
+        let registry = PrimitiveRegistry::new();
+
+        // Test full pin holes
+        let peghole = registry.find_mapping("peghole.dat").unwrap();
+        assert_eq!(peghole.coupling_type, CouplingType::FullPinHole);
+        assert_eq!(peghole.normal_direction, [0.0, 0.0, 1.0]);
+        assert!(matches!(
+            peghole.geometry_override,
+            Some(CouplingGeometry::Linear { length }) if length == 20.0
+        ));
+
+        let connhole = registry.find_mapping("connhole.dat").unwrap();
+        assert_eq!(connhole.coupling_type, CouplingType::FullPinHole);
+
+        // Test half pin holes
+        let peghole3 = registry.find_mapping("peghole3.dat").unwrap();
+        assert_eq!(peghole3.coupling_type, CouplingType::HalfPinHole);
+        assert!(matches!(
+            peghole3.geometry_override,
+            Some(CouplingGeometry::Linear { length }) if length == 10.0
+        ));
+
+        // Test negative pin holes
+        let npeghole = registry.find_mapping("npeghole.dat").unwrap();
+        assert_eq!(npeghole.coupling_type, CouplingType::FullPinHole);
+
+        // Test beam holes
+        let beamhole = registry.find_mapping("beamhole.dat").unwrap();
+        assert_eq!(beamhole.coupling_type, CouplingType::FullPinHole);
+    }
+
+    #[test]
+    fn test_axle_primitives() {
+        let registry = PrimitiveRegistry::new();
+
+        // Test axle
+        let axle = registry.find_mapping("axle.dat").unwrap();
+        assert_eq!(axle.coupling_type, CouplingType::Axle);
+        assert_eq!(axle.normal_direction, [0.0, 0.0, 1.0]);
+
+        let axleend = registry.find_mapping("axleend.dat").unwrap();
+        assert_eq!(axleend.coupling_type, CouplingType::Axle);
+
+        // Test axle holes
+        let axlehole = registry.find_mapping("axlehole.dat").unwrap();
+        assert_eq!(axlehole.coupling_type, CouplingType::AxleHole);
+        assert_eq!(axlehole.normal_direction, [0.0, 0.0, 1.0]);
+
+        // Test axle hole variants
+        let axlehol0 = registry.find_mapping("axlehol0.dat").unwrap();
+        assert_eq!(axlehol0.coupling_type, CouplingType::AxleHole);
+
+        let axlehol5 = registry.find_mapping("axlehol5.dat").unwrap();
+        assert_eq!(axlehol5.coupling_type, CouplingType::AxleHole);
+    }
+
+    #[test]
+    fn test_tube_primitives() {
+        let registry = PrimitiveRegistry::new();
+
+        let tube = registry.find_mapping("4-4cyli.dat").unwrap();
+        assert_eq!(tube.coupling_type, CouplingType::Tube);
+        assert_eq!(tube.normal_direction, [0.0, 1.0, 0.0]);
+        assert!(matches!(
+            tube.geometry_override,
+            Some(CouplingGeometry::Circular { radius }) if radius == 6.0
+        ));
+    }
+
+    #[test]
+    fn test_pin_to_pinhole_compatibility() {
+        // Test smooth pin compatibility
+        let props = CouplingType::Pin.can_connect_to(&CouplingType::FullPinHole);
+        assert!(props.is_some());
+        let props = props.unwrap();
+        assert!(matches!(props.mode, ConnectionMode::Rotational { .. }));
+        assert_eq!(props.clutch_force, 2.0); // Low for smooth rotation
+
+        // Test friction pin compatibility
+        let props = CouplingType::PinWithFriction.can_connect_to(&CouplingType::FullPinHole);
+        assert!(props.is_some());
+        let props = props.unwrap();
+        assert!(matches!(props.mode, ConnectionMode::Rotational { .. }));
+        assert_eq!(props.clutch_force, 12.0); // High for friction
+    }
+
+    #[test]
+    fn test_axle_to_axlehole_compatibility() {
+        let props = CouplingType::Axle.can_connect_to(&CouplingType::AxleHole);
+        assert!(props.is_some());
+        let props = props.unwrap();
+        assert!(matches!(props.mode, ConnectionMode::RotationalLinear { .. }));
+
+        // Axles can also fit in pin holes (loose fit)
+        let props = CouplingType::Axle.can_connect_to(&CouplingType::FullPinHole);
+        assert!(props.is_some());
+    }
+
+    #[test]
+    fn test_registry_count() {
+        let registry = PrimitiveRegistry::new();
+        let count = registry.mappings().len();
+
+        // We should have:
+        // - 4 stud variants
+        // - 8 pin variants (7 connect + 1 bush)
+        // - 3 friction pin variants
+        // - 7 pin hole variants
+        // - 14 axle variants (2 axle + 1 axlehole + 11 axlehol*)
+        // - 1 tube
+        // Total: 37 primitives minimum
+        assert!(count >= 37, "Expected at least 37 primitives, got {}", count);
     }
 }
