@@ -2,17 +2,17 @@ use std::{collections::HashSet, fmt::Display, hash::Hash, ops::Range};
 
 use cgmath::SquareMatrix;
 use image::GenericImageView;
-use ldraw::{color::Color, Matrix4, Vector3, Vector4};
-use wgpu::{util::DeviceExt, TextureViewDescriptor};
+use ldraw::{Matrix4, Vector3, Vector4, color::Color};
+use wgpu::{TextureViewDescriptor, util::DeviceExt};
 
 use crate::display_list::InstanceOps;
 
 use super::{
+    Entity, ObjectSelection,
     display_list::{DisplayList, Instances, SelectionDisplayList, SelectionInstances},
     error,
     part::{EdgeBuffer, MeshBuffer, OptionalEdgeBuffer, Part, PartQuerier},
     projection::Projection,
-    Entity, ObjectSelection,
 };
 
 const DEFAULT_OBJECT_SELECTION_FRAMEBUFFER_SIZE: u32 = 1024;
@@ -202,7 +202,7 @@ impl DefaultMeshRenderingPipeline {
         let sampler = device.create_sampler(&wgpu::SamplerDescriptor {
             min_filter: wgpu::FilterMode::Linear,
             mag_filter: wgpu::FilterMode::Linear,
-            mipmap_filter: wgpu::FilterMode::Nearest,
+            mipmap_filter: wgpu::MipmapFilterMode::Nearest,
             address_mode_u: wgpu::AddressMode::ClampToEdge,
             address_mode_v: wgpu::AddressMode::ClampToEdge,
             address_mode_w: wgpu::AddressMode::ClampToEdge,
@@ -257,8 +257,11 @@ impl DefaultMeshRenderingPipeline {
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render pipeline layout for default mesh"),
-                bind_group_layouts: &[&projection_bind_group_layout, &shading_bind_group_layout],
-                push_constant_ranges: &[],
+                bind_group_layouts: &[
+                    Some(&projection_bind_group_layout),
+                    Some(&shading_bind_group_layout),
+                ],
+                immediate_size: 0,
             });
 
         let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -294,8 +297,8 @@ impl DefaultMeshRenderingPipeline {
             },
             depth_stencil: Some(wgpu::DepthStencilState {
                 format: wgpu::TextureFormat::Depth32Float,
-                depth_write_enabled: true,
-                depth_compare: wgpu::CompareFunction::LessEqual,
+                depth_write_enabled: Some(true),
+                depth_compare: Some(wgpu::CompareFunction::LessEqual),
                 stencil: wgpu::StencilState::default(),
                 bias: wgpu::DepthBiasState::default(),
             }),
@@ -304,7 +307,7 @@ impl DefaultMeshRenderingPipeline {
                 mask: !0,
                 alpha_to_coverage_enabled: false,
             },
-            multiview: None,
+            multiview_mask: None,
             cache: None,
         });
 
@@ -365,8 +368,8 @@ impl NoShadingMeshRenderingPipeline {
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render pipeline layout for default mesh without shading"),
-                bind_group_layouts: &[&projection_bind_group_layout],
-                push_constant_ranges: &[],
+                bind_group_layouts: &[Some(&projection_bind_group_layout)],
+                immediate_size: 0,
             });
 
         let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -402,8 +405,8 @@ impl NoShadingMeshRenderingPipeline {
             },
             depth_stencil: Some(wgpu::DepthStencilState {
                 format: wgpu::TextureFormat::Depth32Float,
-                depth_write_enabled: true,
-                depth_compare: wgpu::CompareFunction::LessEqual,
+                depth_write_enabled: Some(true),
+                depth_compare: Some(wgpu::CompareFunction::LessEqual),
                 stencil: wgpu::StencilState::default(),
                 bias: wgpu::DepthBiasState::default(),
             }),
@@ -412,7 +415,7 @@ impl NoShadingMeshRenderingPipeline {
                 mask: !0,
                 alpha_to_coverage_enabled: false,
             },
-            multiview: None,
+            multiview_mask: None,
             cache: None,
         });
 
@@ -469,8 +472,8 @@ impl EdgeRenderingPipeline {
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render pipeline layout for edges"),
-                bind_group_layouts: &[&projection_bind_group_layout],
-                push_constant_ranges: &[],
+                bind_group_layouts: &[Some(&projection_bind_group_layout)],
+                immediate_size: 0,
             });
 
         let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -506,8 +509,8 @@ impl EdgeRenderingPipeline {
             },
             depth_stencil: Some(wgpu::DepthStencilState {
                 format: wgpu::TextureFormat::Depth32Float,
-                depth_write_enabled: true,
-                depth_compare: wgpu::CompareFunction::LessEqual,
+                depth_write_enabled: Some(true),
+                depth_compare: Some(wgpu::CompareFunction::LessEqual),
                 stencil: wgpu::StencilState::default(),
                 bias: wgpu::DepthBiasState::default(),
             }),
@@ -516,7 +519,7 @@ impl EdgeRenderingPipeline {
                 mask: !0,
                 alpha_to_coverage_enabled: false,
             },
-            multiview: None,
+            multiview_mask: None,
             cache: None,
         });
 
@@ -582,8 +585,8 @@ impl OptionalEdgeRenderingPipeline {
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render pipeline layout for optional edges"),
-                bind_group_layouts: &[&projection_bind_group_layout],
-                push_constant_ranges: &[],
+                bind_group_layouts: &[Some(&projection_bind_group_layout)],
+                immediate_size: 0,
             });
 
         let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -619,8 +622,8 @@ impl OptionalEdgeRenderingPipeline {
             },
             depth_stencil: Some(wgpu::DepthStencilState {
                 format: wgpu::TextureFormat::Depth32Float,
-                depth_write_enabled: true,
-                depth_compare: wgpu::CompareFunction::LessEqual,
+                depth_write_enabled: Some(true),
+                depth_compare: Some(wgpu::CompareFunction::LessEqual),
                 stencil: wgpu::StencilState::default(),
                 bias: wgpu::DepthBiasState::default(),
             }),
@@ -629,7 +632,7 @@ impl OptionalEdgeRenderingPipeline {
                 mask: !0,
                 alpha_to_coverage_enabled: false,
             },
-            multiview: None,
+            multiview_mask: None,
             cache: None,
         });
 
@@ -692,8 +695,8 @@ impl ObjectSelectionRenderingPipeline {
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render pipeline layout for object selection"),
-                bind_group_layouts: &[&projection_bind_group_layout],
-                push_constant_ranges: &[],
+                bind_group_layouts: &[Some(&projection_bind_group_layout)],
+                immediate_size: 0,
             });
 
         let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -726,8 +729,8 @@ impl ObjectSelectionRenderingPipeline {
             },
             depth_stencil: Some(wgpu::DepthStencilState {
                 format: wgpu::TextureFormat::Depth32Float,
-                depth_write_enabled: true,
-                depth_compare: wgpu::CompareFunction::LessEqual,
+                depth_write_enabled: Some(true),
+                depth_compare: Some(wgpu::CompareFunction::LessEqual),
                 stencil: wgpu::StencilState::default(),
                 bias: wgpu::DepthBiasState::default(),
             }),
@@ -736,7 +739,7 @@ impl ObjectSelectionRenderingPipeline {
                 mask: !0,
                 alpha_to_coverage_enabled: false,
             },
-            multiview: None,
+            multiview_mask: None,
             cache: None,
         });
 
@@ -1171,6 +1174,7 @@ impl RenderingPipelineManager {
                 }),
                 occlusion_query_set: None,
                 timestamp_writes: None,
+                multiview_mask: None,
             })
             .forget_lifetime();
 
@@ -1216,7 +1220,10 @@ impl RenderingPipelineManager {
                 tx.send(result).unwrap();
             });
             device
-                .poll(wgpu::PollType::Wait)
+                .poll(wgpu::PollType::Wait {
+                    submission_index: None,
+                    timeout: None,
+                })
                 .expect("Polling from GPU failed");
             rx.receive().await.unwrap()?;
 

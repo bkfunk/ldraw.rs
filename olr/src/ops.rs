@@ -1,8 +1,8 @@
 use cgmath::SquareMatrix;
 use image::RgbaImage;
 use ldraw::{
-    color::{Color, ColorCatalog},
     Matrix4, PartAlias, Point3,
+    color::{Color, ColorCatalog},
 };
 use ldraw_ir::{
     geometry::BoundingBox2,
@@ -82,6 +82,7 @@ impl<'a> Ops<'a> {
                 }),
                 occlusion_query_set: None,
                 timestamp_writes: None,
+                multiview_mask: None,
             })
             .forget_lifetime();
 
@@ -166,6 +167,7 @@ impl<'a> Ops<'a> {
                 }),
                 occlusion_query_set: None,
                 timestamp_writes: None,
+                multiview_mask: None,
             })
             .forget_lifetime();
 

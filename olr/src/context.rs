@@ -1,7 +1,7 @@
 use image::RgbaImage;
 use ldraw::Vector2;
 use ldraw_ir::geometry::BoundingBox2;
-use ldraw_renderer::{pipeline::RenderingPipelineManager, projection::Projection, Entity};
+use ldraw_renderer::{Entity, pipeline::RenderingPipelineManager, projection::Projection};
 
 use crate::error::ContextCreationError;
 
@@ -33,11 +33,12 @@ impl Context {
         height: u32,
         sample_count: u32,
     ) -> Result<Self, ContextCreationError> {
-        let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
+        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends: wgpu::Backends::all(),
             backend_options: Default::default(),
             flags: wgpu::InstanceFlags::default(),
             memory_budget_thresholds: Default::default(),
+            display: None,
         });
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptionsBase {
@@ -55,6 +56,7 @@ impl Context {
                 required_limits: wgpu::Limits::default(),
                 memory_hints: Default::default(),
                 trace: wgpu::Trace::Off,
+                experimental_features: Default::default(),
             })
             .await?;
 
@@ -186,7 +188,10 @@ impl Context {
                 tx.send(result).unwrap();
             });
             self.device
-                .poll(wgpu::PollType::Wait)
+                .poll(wgpu::PollType::Wait {
+                    submission_index: None,
+                    timeout: None,
+                })
                 .expect("Polling from GPU failed");
             rx.receive().await.unwrap().unwrap();
 

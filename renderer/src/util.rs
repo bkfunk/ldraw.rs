@@ -30,6 +30,7 @@ pub async fn request_device(
                 required_limits,
                 memory_hints: Default::default(),
                 trace: wgpu::Trace::Off,
+                experimental_features: Default::default(),
             })
             .await
         {

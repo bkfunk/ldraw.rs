@@ -15,7 +15,7 @@ use ldraw::{
     library::{DocumentLoader, LibraryLoader, PartCache},
     resolvers::local::LocalLoader,
 };
-use viewer_common::App;
+use viewer_common::{App, SurfaceError};
 use winit::{event, event_loop::EventLoop, window::WindowBuilder};
 
 async fn main_loop<L: LibraryLoader + 'static>(
@@ -82,16 +82,13 @@ async fn main_loop<L: LibraryLoader + 'static>(
                                 total_duration = 0;
                             }
                         }
-                        Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => {
+                        Err(SurfaceError::Lost | SurfaceError::Outdated) => {
                             app.resize(app.size);
                         }
-                        Err(wgpu::SurfaceError::OutOfMemory) => {
-                            target.exit();
-                        }
-                        Err(wgpu::SurfaceError::Timeout) => {
+                        Err(SurfaceError::Timeout) => {
                             println!("Surface timeout");
                         }
-                        Err(wgpu::SurfaceError::Other) => {
+                        Err(SurfaceError::Other) => {
                             println!("Unrecognized surface error");
                         }
                     }

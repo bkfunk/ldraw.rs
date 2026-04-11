@@ -426,6 +426,13 @@ pub struct App<L: LibraryLoader> {
     orbit_controller: RefCell<OrbitController>,
 }
 
+pub enum SurfaceError {
+    Lost,
+    Outdated,
+    Timeout,
+    Other,
+}
+
 impl<L: LibraryLoader> App<L> {
     pub async fn new(
         window: Arc<Window>,
@@ -435,7 +442,7 @@ impl<L: LibraryLoader> App<L> {
     ) -> Result<Self, error::AppCreationError> {
         let window_size = window.inner_size();
 
-        let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
+        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends: wgpu::Backends::all(),
             backend_options: Default::default(),
             flags: if cfg!(debug_assertions) {
@@ -444,6 +451,7 @@ impl<L: LibraryLoader> App<L> {
                 Default::default()
             },
             memory_budget_thresholds: Default::default(),
+            display: None,
         });
 
         let sample_count = if supports_antialiasing { 4 } else { 1 };
@@ -662,7 +670,7 @@ impl<L: LibraryLoader> App<L> {
         }
     }
 
-    pub fn render(&mut self) -> Result<Duration, wgpu::SurfaceError> {
+    pub fn render(&mut self) -> Result<Duration, SurfaceError> {
         let now = Instant::now();
 
         self.projection.update(&self.device, &self.queue);
@@ -672,7 +680,16 @@ impl<L: LibraryLoader> App<L> {
 
         let part_querier = self.parts.borrow();
 
-        let output = self.surface.get_current_texture()?;
+        let output = match self.surface.get_current_texture() {
+            wgpu::CurrentSurfaceTexture::Success(output) => output,
+            wgpu::CurrentSurfaceTexture::Suboptimal(output) => output,
+            wgpu::CurrentSurfaceTexture::Lost => return Err(SurfaceError::Lost),
+            wgpu::CurrentSurfaceTexture::Outdated => return Err(SurfaceError::Outdated),
+            wgpu::CurrentSurfaceTexture::Timeout => return Err(SurfaceError::Timeout),
+            wgpu::CurrentSurfaceTexture::Occluded | wgpu::CurrentSurfaceTexture::Validation => {
+                return Err(SurfaceError::Other)
+            }
+        };
         let view = output
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
@@ -718,6 +735,7 @@ impl<L: LibraryLoader> App<L> {
                     }),
                     occlusion_query_set: None,
                     timestamp_writes: None,
+                    multiview_mask: None,
                 })
                 .forget_lifetime();
 
