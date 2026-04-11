@@ -5,8 +5,8 @@ use std::{
 };
 
 use crate::{
-    elements::{Command, Header, Line, Meta, OptionalLine, PartReference, Quad, Triangle},
     PartAlias, Winding,
+    elements::{Command, Header, Line, Meta, OptionalLine, PartReference, Quad, Triangle},
 };
 
 #[derive(Clone, Debug, PartialEq)]
@@ -62,16 +62,17 @@ fn traverse_dependencies(
     list: &mut HashSet<PartAlias>,
 ) {
     for part_ref in document.iter_refs() {
-        if let Some(parent) = parent {
-            if parent.subparts.contains_key(&part_ref.name) {
-                traverse_dependencies(
-                    parent.subparts.get(&part_ref.name).unwrap(),
-                    Some(parent),
-                    list,
-                );
-                continue;
-            }
+        if let Some(parent) = parent
+            && parent.subparts.contains_key(&part_ref.name)
+        {
+            traverse_dependencies(
+                parent.subparts.get(&part_ref.name).unwrap(),
+                Some(parent),
+                list,
+            );
+            continue;
         }
+
         list.insert(part_ref.name.clone());
     }
 }

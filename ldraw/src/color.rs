@@ -89,10 +89,16 @@ pub struct MaterialSpeckle {
     pub maxsize: f32,
 }
 
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum MaterialFabric {
+    Canvas,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum CustomizedMaterial {
     Glitter(MaterialGlitter),
     Speckle(MaterialSpeckle),
+    Fabric(MaterialFabric),
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -194,14 +200,8 @@ impl ColorReference {
         let code1 = code / 16;
         let code2 = code % 16;
 
-        let color1 = match colors.get(&code1) {
-            Some(c) => c,
-            None => return None,
-        };
-        let color2 = match colors.get(&code2) {
-            Some(c) => c,
-            None => return None,
-        };
+        let color1 = colors.get(&code1)?;
+        let color2 = colors.get(&code2)?;
 
         let new_color = Rgba::new(
             color1.color.red() / 2 + color2.color.red() / 2,
@@ -260,10 +260,10 @@ impl ColorReference {
             return ColorReference::Color(c.clone());
         }
 
-        if (256..=512).contains(&code) {
-            if let Some(c) = ColorReference::resolve_blended(code, colors) {
-                return ColorReference::Color(c);
-            }
+        if (256..=512).contains(&code)
+            && let Some(c) = ColorReference::resolve_blended(code, colors)
+        {
+            return ColorReference::Color(c);
         }
 
         if (code & 0xff00_0000) == 0x0200_0000 {

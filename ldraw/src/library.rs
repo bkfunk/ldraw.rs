@@ -9,10 +9,10 @@ use futures::future::join_all;
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    PartAlias,
     color::ColorCatalog,
     document::{Document, MultipartDocument},
     error::ResolutionError,
-    PartAlias,
 };
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, Hash)]
@@ -206,17 +206,15 @@ impl<'a, F: Fn(PartAlias, Result<(), ResolutionError>), L: LibraryLoader>
                 continue;
             }
 
-            if local {
-                if let Some(cached) = self.local_cache.query(alias) {
-                    self.scan_dependencies_with_parent(None, Arc::clone(&cached), true);
+            if local && let Some(cached) = self.local_cache.query(alias) {
+                self.scan_dependencies_with_parent(None, Arc::clone(&cached), true);
 
-                    self.put_state(
-                        alias.clone(),
-                        true,
-                        ResolutionState::Associated(Arc::clone(&cached)),
-                    );
-                    continue;
-                }
+                self.put_state(
+                    alias.clone(),
+                    true,
+                    ResolutionState::Associated(Arc::clone(&cached)),
+                );
+                continue;
             }
 
             let cached = self.cache.read().unwrap().query(alias);
@@ -262,17 +260,15 @@ impl<'a, F: Fn(PartAlias, Result<(), ResolutionError>), L: LibraryLoader>
                 continue;
             }
 
-            if local {
-                if let Some(cached) = self.local_cache.query(alias) {
-                    self.scan_dependencies_with_parent(None, Arc::clone(&cached), true);
+            if local && let Some(cached) = self.local_cache.query(alias) {
+                self.scan_dependencies_with_parent(None, Arc::clone(&cached), true);
 
-                    self.put_state(
-                        alias.clone(),
-                        true,
-                        ResolutionState::Associated(Arc::clone(&cached)),
-                    );
-                    continue;
-                }
+                self.put_state(
+                    alias.clone(),
+                    true,
+                    ResolutionState::Associated(Arc::clone(&cached)),
+                );
+                continue;
             }
 
             let cached = self.cache.read().unwrap().query(alias);
@@ -316,7 +312,8 @@ impl<'a, F: Fn(PartAlias, Result<(), ResolutionError>), L: LibraryLoader>
 
         let result = join_all(futs).await;
 
-        for ((alias, mut local), result) in pending.iter().zip(result) {
+        for ((alias, local), result) in pending.iter().zip(result) {
+            let mut local = *local;
             let state = match result {
                 Ok((location, document)) => {
                     (self.on_update)(alias.clone(), Ok(()));
@@ -466,8 +463,8 @@ mod tests {
 
     use super::{PartCache, PartKind};
     use crate::{
-        document::{BfcCertification, Document, MultipartDocument},
         PartAlias,
+        document::{BfcCertification, Document, MultipartDocument},
     };
 
     #[test]

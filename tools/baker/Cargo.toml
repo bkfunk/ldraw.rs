@@ -2,7 +2,7 @@
 name = "baker"
 version = "0.1.0"
 authors = ["Park Joon-Kyu <segfault87@gmail.com>"]
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 bincode.workspace = true

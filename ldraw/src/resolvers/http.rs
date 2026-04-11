@@ -87,9 +87,7 @@ impl LibraryLoader for HttpLoader {
         let parts_fut = self.client.get(parts_url).send();
         let p_fut = self.client.get(p_url).send();
 
-        let (location, res) = if local && self.document_url_base.is_some() {
-            let document_url_base = self.document_url_base.as_ref().unwrap();
-
+        let (location, res) = if local && let Some(document_url_base) = self.document_url_base.as_ref() {
             let local_url = document_url_base.join(&alias.normalized).unwrap();
             let local_fut = self.client.get(local_url).send();
             let (local, parts, p) = join!(local_fut, parts_fut, p_fut);

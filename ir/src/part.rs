@@ -3,17 +3,17 @@ use std::{
 };
 
 use cgmath::{AbsDiffEq, InnerSpace, Rad, SquareMatrix};
-use kdtree::{distance::squared_euclidean, KdTree};
+use kdtree::{KdTree, distance::squared_euclidean};
 use ldraw::{
+    Matrix4, Vector3, Winding,
     color::{ColorCatalog, ColorReference},
     document::{Document, MultipartDocument},
     elements::{BfcStatement, Command, Meta},
     library::ResolutionResult,
-    Matrix4, Vector3, Winding,
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{geometry::BoundingBox3, MeshGroupKey};
+use crate::{MeshGroupKey, geometry::BoundingBox3};
 
 const NORMAL_BLEND_THRESHOLD: Rad<f32> = Rad(f32::consts::FRAC_PI_6);
 
@@ -45,12 +45,11 @@ impl Default for VertexBufferBuilder {
 impl VertexBufferBuilder {
     pub fn add(&mut self, vertex: Vector3) -> u32 {
         let vertex_ref: &[f32; 3] = vertex.as_ref();
-        if let Ok(entries) = self.index_table.nearest(vertex_ref, 1, &squared_euclidean) {
-            if let Some((dist, index)) = entries.first() {
-                if dist < &f32::default_epsilon() {
-                    return **index;
-                }
-            }
+        if let Ok(entries) = self.index_table.nearest(vertex_ref, 1, &squared_euclidean)
+            && let Some((dist, index)) = entries.first()
+            && dist < &f32::default_epsilon()
+        {
+            return **index;
         }
 
         let index = self.current_index;
@@ -410,7 +409,7 @@ impl<'a> Iterator for FaceIterator<'a> {
 }
 
 impl FaceVertices {
-    pub fn triangles(&self, reverse: bool) -> FaceIterator {
+    pub fn triangles(&self, reverse: bool) -> FaceIterator<'_> {
         let order = match self {
             FaceVertices::Triangle(_) => TRIANGLE_INDEX_ORDER,
             FaceVertices::Quad(_) => QUAD_INDEX_ORDER,
@@ -632,11 +631,11 @@ impl MeshBuilder {
             }
         }
 
-        if let Some(bounding_box_min) = bounding_box_min {
-            if let Some(bounding_box_max) = bounding_box_max {
-                bounding_box.update_point(&bounding_box_min);
-                bounding_box.update_point(&bounding_box_max);
-            }
+        if let Some(bounding_box_min) = bounding_box_min
+            && let Some(bounding_box_max) = bounding_box_max
+        {
+            bounding_box.update_point(&bounding_box_min);
+            bounding_box.update_point(&bounding_box_max);
         }
     }
 }

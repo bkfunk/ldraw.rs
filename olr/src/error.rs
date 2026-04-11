@@ -23,7 +23,7 @@ impl Display for ContextCreationError {
 }
 
 impl Error for ContextCreationError {
-    fn cause(&self) -> Option<&(dyn Error)> {
+    fn cause(&self) -> Option<&dyn Error> {
         match *self {
             ContextCreationError::NoAdapterFound => None,
             ContextCreationError::RequestDeviceError(ref e) => Some(e),

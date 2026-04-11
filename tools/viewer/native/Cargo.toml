@@ -1,6 +1,6 @@
 [package]
 name = "viewer_native"
-edition = "2021"
+edition = "2024"
 version = "0.1.0"
 authors = ["Park Joon-Kyu <segfault87@gmail.com>"]
 

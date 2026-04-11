@@ -7,15 +7,15 @@ use tokio_stream::wrappers::LinesStream;
 
 use crate::{
     color::{
-        Color, ColorCatalog, ColorReference, CustomizedMaterial, Material, MaterialGlitter,
-        MaterialSpeckle, Rgba,
+        Color, ColorCatalog, ColorReference, CustomizedMaterial, Material, MaterialFabric,
+        MaterialGlitter, MaterialSpeckle, Rgba,
     },
     document::{BfcCertification, Document, MultipartDocument},
     elements::{
         BfcStatement, Command, Header, Line, Meta, OptionalLine, PartReference, Quad, Triangle,
     },
     error::{ColorDefinitionParseError, DocumentParseError, ParseError},
-    {Matrix4, PartAlias, Vector4, Winding},
+    Matrix4, PartAlias, Vector4, Winding,
 };
 
 #[derive(Debug, PartialEq)]
@@ -636,6 +636,13 @@ fn parse_customized_material(
                 minsize,
                 maxsize,
             }))
+        }
+        "FABRIC" => {
+            let material = next_token(iterator, false)?;
+            match material.as_str() {
+                "CANVAS" => Ok(CustomizedMaterial::Fabric(MaterialFabric::Canvas)),
+                _ => Err(ColorDefinitionParseError::UnknownMaterial(material)),
+            }
         }
         e => Err(ColorDefinitionParseError::UnknownMaterial(e.to_string())),
     }

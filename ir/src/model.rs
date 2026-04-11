@@ -8,11 +8,11 @@ use std::{
 
 use cgmath::SquareMatrix;
 use ldraw::{
+    Matrix4, PartAlias, Vector3,
     color::{ColorCatalog, ColorReference},
     document::{Document as LdrawDocument, MultipartDocument as LdrawMultipartDocument},
     elements::{Command, Meta},
-    library::{resolve_dependencies, LibraryLoader, PartCache, ResolutionResult},
-    Matrix4, PartAlias, Vector3,
+    library::{LibraryLoader, PartCache, ResolutionResult, resolve_dependencies},
 };
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -20,7 +20,7 @@ use uuid::Uuid;
 use crate::{
     geometry::BoundingBox3,
     part::{
-        bake_part_from_document, bake_part_from_multipart_document, Part, PartDimensionQuerier,
+        Part, PartDimensionQuerier, bake_part_from_document, bake_part_from_multipart_document,
     },
 };
 
@@ -179,10 +179,10 @@ fn build_objects<P: Clone + Eq + PartialEq + Hash + From<PartAlias>>(
 fn resolve_colors<P>(objects: &mut [Object<P>], colors: &ColorCatalog) {
     for object in objects.iter_mut() {
         match &mut object.data {
-            ObjectInstance::Part(ref mut p) => {
+            ObjectInstance::Part(p) => {
                 p.color.resolve_self(colors);
             }
-            ObjectInstance::PartGroup(ref mut pg) => {
+            ObjectInstance::PartGroup(pg) => {
                 pg.color.resolve_self(colors);
             }
             _ => {}

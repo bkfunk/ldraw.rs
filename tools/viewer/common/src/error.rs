@@ -27,7 +27,7 @@ impl Display for AppCreationError {
 }
 
 impl Error for AppCreationError {
-    fn cause(&self) -> Option<&(dyn Error)> {
+    fn cause(&self) -> Option<&dyn Error> {
         match *self {
             Self::NoAdapterFound => None,
             Self::RequestDeviceError(ref e) => Some(e),

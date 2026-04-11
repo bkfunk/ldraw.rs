@@ -2,7 +2,7 @@
 name = "viewer-common"
 version = "0.1.0"
 authors = ["Park Joon-Kyu <segfault87@gmail.com>"]
-edition = "2018"
+edition = "2024"
 
 [dependencies]
 async-trait = "~0.1.51"
