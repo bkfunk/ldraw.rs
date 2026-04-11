@@ -11,18 +11,18 @@ use std::{
 
 use gloo::events::EventListener;
 use ldraw::{
+    PartAlias,
     document::MultipartDocument,
     error::ResolutionError,
     library::{CacheCollectionStrategy, LibraryLoader, PartCache},
     parser::parse_multipart_document,
     resolvers::http::HttpLoader,
-    PartAlias,
 };
 use reqwest::{Client, Url};
 use tokio::io::BufReader;
 use uuid::Uuid;
-use viewer_common::{App, State};
-use wasm_bindgen::{prelude::*, JsCast};
+use viewer_common::{App, State, SurfaceError};
+use wasm_bindgen::{JsCast, prelude::*};
 use wasm_bindgen_futures::spawn_local;
 use web_sys::{
     HtmlButtonElement, HtmlCanvasElement, HtmlDivElement, HtmlSelectElement, HtmlTextAreaElement,
@@ -343,7 +343,7 @@ pub async fn run(path: JsValue) -> JsValue {
         let cache = Arc::clone(&cache);
 
         event_loop
-            .run(move |event, target| match event {
+            .run(move |event, _target| match event {
                 event::Event::AboutToWait => {
                     app.borrow().request_redraw();
                 }
@@ -373,16 +373,13 @@ pub async fn run(path: JsValue) -> JsValue {
                                         duration.as_millis(),
                                     ));
                                 }
-                                Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => {
+                                Err(SurfaceError::Lost | SurfaceError::Outdated) => {
                                     //app.resize(app.size);
                                 }
-                                Err(wgpu::SurfaceError::OutOfMemory) => {
-                                    target.exit();
-                                }
-                                Err(wgpu::SurfaceError::Timeout) => {
+                                Err(SurfaceError::Timeout) => {
                                     println!("Surface timeout");
                                 }
-                                Err(wgpu::SurfaceError::Other) => {
+                                Err(SurfaceError::Other) => {
                                     println!("Unrecognized surface error");
                                 }
                             }
