@@ -307,7 +307,7 @@ mod tests {
             (part_a, "clip_0".to_string()),
             (part_b, "bar_0".to_string()),
             CouplingType::Clip,
-            CouplingType::Bar,
+            CouplingType::BarEnd,
             Vector3::zero(),
             Vector3::zero(),
         ).unwrap();

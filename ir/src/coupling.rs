@@ -80,7 +80,7 @@ mod tests {
     fn test_coupling_type_name() {
         assert_eq!(CouplingType::Stud.name(), "Stud");
         assert_eq!(CouplingType::AntiStud.name(), "Anti-stud");
-        assert_eq!(CouplingType::FullPinHole.name(), "Pin Hole");
+        assert_eq!(CouplingType::FullPinHole.name(), "Full Pin Hole");
         assert_eq!(CouplingType::Axle.name(), "Axle");
     }
 
@@ -135,7 +135,7 @@ mod tests {
         assert!(CouplingType::Pin.can_connect_to(&CouplingType::AxleHole).is_none());
         
         // Bar cannot connect to pin hole
-        assert!(CouplingType::Bar.can_connect_to(&CouplingType::FullPinHole).is_none());
+        assert!(CouplingType::BarEnd.can_connect_to(&CouplingType::FullPinHole).is_none());
     }
 
     #[test]

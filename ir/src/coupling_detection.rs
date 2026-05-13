@@ -71,11 +71,12 @@ pub fn detect_from_geometry(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::coupling::{CouplingGeometry, CouplingType};
 
     #[test]
     fn test_coupling_type_names() {
         assert_eq!(CouplingType::Stud.name(), "Stud");
-        assert_eq!(CouplingType::FullPinHole.name(), "Pin Hole");
+        assert_eq!(CouplingType::FullPinHole.name(), "Full Pin Hole");
         assert_eq!(CouplingType::AxleHole.name(), "Axle Hole");
     }
 

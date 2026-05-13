@@ -365,7 +365,7 @@ mod tests {
             true,
         );
 
-        assert_eq!(male_hinge.coupling_type, CouplingType::HingeMale);
+        assert_eq!(male_hinge.coupling_type, CouplingType::Hinge1x2BrickMale);
         assert_eq!(male_hinge.id, "hinge_m");
 
         let female_hinge = CouplingPatterns::create_hinge(
@@ -375,7 +375,7 @@ mod tests {
             false,
         );
 
-        assert_eq!(female_hinge.coupling_type, CouplingType::HingeFemale);
+        assert_eq!(female_hinge.coupling_type, CouplingType::Hinge1x2BrickFemale);
     }
 
     #[test]
