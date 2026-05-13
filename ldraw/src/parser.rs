@@ -1048,7 +1048,8 @@ mod tests {
 0 !COLOUR Glitter                                               CODE   6   VALUE #FFFF00   EDGE #00FFFF   MATERIAL GLITTER VALUE #FF00FF FRACTION 0.17 VFRACTION 0.2 SIZE 1
 0 !COLOUR Glitter_Transparent                                   CODE   7   VALUE #00FFFF   EDGE #FFFF00   ALPHA 128   MATERIAL GLITTER VALUE #FF00FF FRACTION 0.17 VFRACTION 0.2 SIZE 1
 0 !COLOUR Speckle                                               CODE   8   VALUE #123456   EDGE #654321   MATERIAL SPECKLE VALUE #898788 FRACTION 0.4 MINSIZE 1 MAXSIZE 3
-0 !COLOUR Rubber                                                CODE   9   VALUE #ABCDEF   EDGE #FEDCBA   RUBBER";
+0 !COLOUR Rubber                                                CODE   9   VALUE #ABCDEF   EDGE #FEDCBA   RUBBER
+0 !COLOUR Fabric                                                CODE  10   VALUE #112233   EDGE #445566   FABRIC";
 
     #[tokio::test]
     async fn test_parse_color_definition() {
@@ -1158,6 +1159,14 @@ mod tests {
                 edge: Rgba::new(0xfe, 0xdc, 0xba, 255),
                 luminance: 0,
                 material: Material::Rubber,
+            },
+            Color {
+                code: 10,
+                name: "Fabric".into(),
+                color: Rgba::new(0x11, 0x22, 0x33, 255),
+                edge: Rgba::new(0x44, 0x55, 0x66, 255),
+                luminance: 0,
+                material: Material::Fabric,
             },
         ];
         for material in colors {

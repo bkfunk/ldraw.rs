@@ -102,6 +102,7 @@ pub enum CustomizedMaterial {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub enum Material {
     Plastic,
     Chrome,
